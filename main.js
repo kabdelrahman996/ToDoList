@@ -1,124 +1,124 @@
+// ELEMENTS
+const newTaskInput = document.querySelector('.input');
+const addBtn = document.querySelector('.add');
+const clearAllBtn = document.querySelector('.clear-all');
+const unCompletedListEl = document.querySelector('.tasks-list');
+const completedListEl = document.querySelector('.completed-tasks');
 
-
-
-let taskSpace = document.querySelector(".input");
-window.onload = function () {
-    taskSpace.focus();
-    taskSpace.addEventListener("keypress", function (e) {
-        if (e.key === "Enter") {
-            addTask(taskInput.value);
-            taskInput.value = "";
-            taskSpace.focus();
-        }
-    });
+const state = {
+  tasks: [],
 };
 
-
-let taskInput = document.querySelector(".input");
-let addBtn = document.querySelector(".add");
-let tasksList = document.querySelector(".tasks-list");
-let completedList = document.querySelector(".completed-tasks");
-
-let tasks = [];
-
-
-if (localStorage.getItem("tasks")) {
-    tasks = JSON.parse(localStorage.getItem("tasks"));
+// HELPERS
+function clearFocusTaskInput() {
+  newTaskInput.value = '';
+  newTaskInput.focus();
 }
 
-
-
-
-addBtn.addEventListener("click", function () {
-    if (taskInput.value !== "") {
-        addTask(taskInput.value);
-    }
-    taskInput.value = "";
-    taskSpace.focus();
-
-});
-
-
+function updateTasks() {
+  localStorage.setItem('tasks', JSON.stringify(state.tasks));
+  updateTasksUI(state.tasks);
+}
 
 function addTask(tsk) {
-    let newTsk = {
-        id: Date.now(),
-        content: tsk,
-        isCompleted: false,
-    };
-    tasks.push(newTsk);
-    saveTasksToLocalStorage(tasks);
-    displayTasks(tasks);
+  const newTsk = {
+    id: Date.now(),
+    content: tsk,
+    isCompleted: false,
+  };
+
+  state.tasks.push(newTsk);
+  updateTasks();
 }
 
-document.body.addEventListener("click", function (e) {
-    if (e.target.classList.contains("icon")) {
-        let taskID = e.target.parentElement.id;
-        changeStatus(taskID);
-    }
-    if (e.target.classList.contains("del")) {
-        let taskID = e.target.parentElement.id;
-        deleteTask(taskID);
-    }
-})
-
 function changeStatus(taskID) {
-    for (let i = 0; i < tasks.length; i++) {
-        if (tasks[i].id == Number(taskID)) {
-            tasks[i].isCompleted = !tasks[i].isCompleted;
-        }
-    }
-    saveTasksToLocalStorage(tasks);
-    displayTasks(tasks)
+  state.tasks.forEach((task) => {
+    if (task.id == Number(taskID)) task.isCompleted = !task.isCompleted;
+  });
+
+  updateTasks();
 }
 
 function deleteTask(taskID) {
-    tasks = tasks.filter((task) => task.id != Number(taskID));
-    saveTasksToLocalStorage(tasks);
-    displayTasks(tasks);
+  state.tasks = state.tasks.filter((task) => task.id != Number(taskID));
+
+  updateTasks();
 }
 
-
-displayTasks(tasks);
-
-function displayTasks(arr) {
-    tasksList.innerHTML = ``;
-    completedList.innerHTML = ``;
-    arr.forEach((task) => {
-        let newDiv = document.createElement("div");
-        newDiv.classList.add("task");
-        newDiv.innerHTML = `<i class="fa-regular fa-circle icon"></i> <h3>${task.content}</h3> <i class="fa-solid fa-trash del"></i>`;
-        newDiv.setAttribute("id", `${task.id}`);
-        if (task.isCompleted === true) {
-            newDiv.classList.add("completed");
-            completedList.appendChild(newDiv);
-        } else {
-            tasksList.appendChild(newDiv);
-        }
-    })
-    if (arr.length > 0) {
-        let clearBtn = document.querySelector(".clear-all");
-        clearBtn.style.display = "block";
-        clearBtn.addEventListener("click", function () {
-            clearAll();
-        })
-    } else {
-        let clearBtn = document.querySelector(".clear-all");
-        clearBtn.style.display = "none";
-    }
+function emptyTaskWrappers() {
+  unCompletedListEl.innerHTML = ``;
+  completedListEl.innerHTML = ``;
 }
 
+const renderTask = (task) => {
+  const newDiv = document.createElement('div');
+  newDiv.classList.add('task');
+  newDiv.innerHTML = `<i class="fa-regular fa-circle icon"></i> <h3>${task.content}</h3> <i class="fa-solid fa-trash del"></i>`;
+  newDiv.setAttribute('id', `${task.id}`);
 
-function clearAll() {
-    localStorage.removeItem('tasks');
-    location.reload();
+  if (task.isCompleted === true) {
+    newDiv.classList.add('completed');
+    completedListEl.appendChild(newDiv);
+  } else {
+    unCompletedListEl.appendChild(newDiv);
+  }
+};
+
+function updateTasksUI() {
+  emptyTaskWrappers();
+
+  state.tasks.forEach(renderTask);
+
+  let clearBtnDisplay = 'none';
+  if (state.tasks.length > 0) clearBtnDisplay = 'block';
+  clearAllBtn.style.display = clearBtnDisplay;
 }
 
-
-
-function saveTasksToLocalStorage(arr) {
-    let task = JSON.stringify(arr);
-    localStorage.setItem("tasks", task);
+// HANDLERS
+function handleClearAll() {
+  state.tasks = [];
+  updateTasks();
 }
 
+function handleAddTodo() {
+  if (newTaskInput.value !== '') addTask(newTaskInput.value);
 
+  clearFocusTaskInput();
+}
+
+function handleInputkeypress(e) {
+  if (e.key !== 'Enter') return;
+
+  addTask(newTaskInput.value);
+
+  clearFocusTaskInput();
+}
+
+function handleClickBody(e) {
+  if (e.target.classList.contains('icon')) {
+    let taskID = e.target.parentElement.id;
+    changeStatus(taskID);
+  }
+  if (e.target.classList.contains('del')) {
+    let taskID = e.target.parentElement.id;
+    deleteTask(taskID);
+  }
+}
+
+clearAllBtn.addEventListener('click', handleClearAll);
+addBtn.addEventListener('click', handleAddTodo);
+document.body.addEventListener('click', handleClickBody);
+newTaskInput.addEventListener('keypress', handleInputkeypress);
+
+//
+const init = function () {
+  if (localStorage.getItem('tasks')) {
+    state.tasks = JSON.parse(localStorage.getItem('tasks'));
+  }
+
+  updateTasksUI();
+
+  clearFocusTaskInput();
+};
+
+init();
