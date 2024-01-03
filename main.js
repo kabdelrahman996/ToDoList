@@ -1,5 +1,4 @@
 
-// Remember to Create  Clear All Button
 
 
 let taskSpace = document.querySelector(".input");
@@ -17,7 +16,6 @@ window.onload = function () {
 
 let taskInput = document.querySelector(".input");
 let addBtn = document.querySelector(".add");
-let clear = document.querySelector(".clear-all");
 let tasksList = document.querySelector(".tasks-list");
 let completedList = document.querySelector(".completed-tasks");
 
